@@ -1,6 +1,6 @@
-# TuneBox (Authorized URL -> MP3)
+# TuneBox (Vercel compatible)
 
-This app downloads media directly and serves it as an MP3 file name output.
+This app resolves YouTube media with ZylaLabs and redirects to a downloadable URL.
 
 For YouTube links, it resolves the media URL via the ZylaLabs endpoint:
 `GET https://zylalabs.com/api/11016/youtube+download+and+info+api/20761/download`
@@ -29,13 +29,20 @@ Then open: `http://127.0.0.1:3000`
 
 ## API
 
-- `POST /api/jobs`
-  - body: `{ "sourceUrl": "https://...", "fileName": "track-name.mp3", "format": "mp3" }`
-  - response: `{ "jobId": "..." }`
-- `GET /api/jobs/:id`
-  - response: `{ id, status, progress, message, downloadUrl }`
-- `GET /downloads/:file`
-  - returns converted mp3 as attachment
+- `POST /api/resolve`
+  - body: `{ "sourceUrl": "https://youtube.com/watch?v=...", "format": "mp3" }`
+  - response: `{ "success": true, "format": "mp3", "downloadUrl": "https://..." }`
+
+Supported `format` values:
+- Audio: `mp3`, `m4a`, `flac`, `opus`, `wav`
+- Video: `360`, `480`, `720`, `1080`, `1440`, `2160`
+
+## Vercel deployment
+
+Set these Project Environment Variables in Vercel:
+- `ZYLALABS_API_KEY` (required)
+- `ZYLALABS_SOURCE_QUERY_PARAM` (optional, default: `url`)
+- `ZYLALABS_FORMAT_QUERY_PARAM` (optional, default: `format`)
 
 ## ZylaLabs YouTube request/response contract
 

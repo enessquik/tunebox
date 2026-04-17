@@ -5,8 +5,6 @@ const statusBox = document.getElementById("status-box");
 const progressBar = document.getElementById("progress-bar");
 const progressWrap = document.querySelector(".progress");
 
-let pollTimer = null;
-
 const setStatus = (message, type = "") => {
   statusBox.textContent = message;
   statusBox.className = "status-box";
@@ -34,47 +32,8 @@ const setFormDisabled = (disabled) => {
   });
 };
 
-const stopPolling = () => {
-  if (pollTimer) {
-    clearInterval(pollTimer);
-    pollTimer = null;
-  }
-};
-
-const pollJob = (jobId) => {
-  pollTimer = setInterval(async () => {
-    try {
-      const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}`);
-      if (!response.ok) {
-        throw new Error("İş durumu alınamadı.");
-      }
-      const job = await response.json();
-      setProgress(job.progress || 0);
-      setStatus(job.message || "İşleniyor...");
-
-      if (job.status === "done" && job.downloadUrl) {
-        stopPolling();
-        setFormDisabled(false);
-        setStatus("İndirme hazır, başlatılıyor.", "success");
-        window.location.href = job.downloadUrl;
-      } else if (job.status === "failed") {
-        stopPolling();
-        setFormDisabled(false);
-        setStatus(job.message || "İndirme başarısız.", "error");
-      }
-    } catch (error) {
-      stopPolling();
-      setFormDisabled(false);
-      const message = error instanceof Error ? error.message : "Durum takibi sırasında hata oluştu.";
-      setStatus(message, "error");
-      setProgress(0);
-    }
-  }, 1200);
-};
-
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  stopPolling();
 
   const sourceUrl = urlInput.value.trim();
   const format = formatInput.value.trim();
@@ -98,11 +57,11 @@ form.addEventListener("submit", async (event) => {
   }
 
   setFormDisabled(true);
-  setStatus("İş kuyruğa alınıyor...");
-  setProgress(3);
+  setStatus("Bağlantı çözülüyor...");
+  setProgress(25);
 
   try {
-    const response = await fetch("/api/jobs", {
+    const response = await fetch("/api/resolve", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -115,8 +74,14 @@ form.addEventListener("submit", async (event) => {
       throw new Error(payload.error || "İş oluşturulamadı.");
     }
 
-    setStatus("İş oluşturuldu, işleniyor...");
-    pollJob(payload.jobId);
+    if (!payload.downloadUrl) {
+      throw new Error("İndirilebilir bağlantı alınamadı.");
+    }
+
+    setProgress(100);
+    setStatus("İndirme hazır, başlatılıyor.", "success");
+    setFormDisabled(false);
+    window.location.href = payload.downloadUrl;
   } catch (error) {
     setFormDisabled(false);
     const message = error instanceof Error ? error.message : "İşlem başlatılamadı.";
