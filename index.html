@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TuneBox MP3</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <a class="logo" href="#" aria-label="Ana sayfa">
+        <span class="logo-dot" aria-hidden="true"></span>
+      </a>
+      <label class="search-wrap" for="global-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-1.06 1.06l.27.28v.79L18.5 21 20 19.5zM10 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"></path>
+        </svg>
+        <input id="global-search" type="search" placeholder="Search tracks or links...">
+      </label>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" type="button" aria-label="Create queue"><span>+</span></button>
+      <button class="icon-btn" type="button" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2a6 6 0 0 0-6 6v3.17c0 .53-.21 1.04-.59 1.41L4 14v2h16v-2l-1.41-1.42a2 2 0 0 1-.59-1.41V8a6 6 0 0 0-6-6zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22z"></path>
+        </svg>
+      </button>
+      <button class="avatar-btn" type="button" aria-label="Avatar menu">
+        <img src="https://avatars.githubusercontent.com/u/9919?s=64&v=4" alt="Kullanıcı avatarı">
+      </button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="layout">
+      <aside class="left-col">
+        <section class="card user-card">
+          <div class="user-head">
+            <img class="avatar-lg" src="https://avatars.githubusercontent.com/u/9919?s=96&v=4" alt="Kullanıcı avatarı">
+            <div>
+              <h2>TuneBox</h2>
+              <p>@tunebox</p>
+            </div>
+          </div>
+          <p class="muted">Dünyanın en iyi Youtube --> MP3 dönüştürücüsü.</p>
+          <button class="btn" type="button">View profile</button>
+        </section>
+
+        <section class="card repos-card">
+          <div class="card-head">
+            <h3>Top sources</h3>
+            <a href="#">Customize</a>
+          </div>
+          <ul class="repo-list">
+            <li><a href="#">podcast-cdn</a><p><span class="lang-dot"></span>MP3 · 412 dosya · güncellendi 1s</p></li>
+            <li><a href="#">music-archive</a><p><span class="lang-dot"></span>MP3 · 96 dosya · güncellendi 6s</p></li>
+            <li><a href="#">voice-notes</a><p><span class="lang-dot"></span>MP3 · 72 dosya · güncellendi 1g</p></li>
+          </ul>
+        </section>
+      </aside>
+
+      <section class="center-col">
+        <section class="card downloader-card">
+          <h1>YouTube İndir</h1>
+          <p class="muted">YouTube bağlantıları ZylaLabs API ile çözülür. Sadece hak sahibi olduğunuz veya lisanslı içerikleri kullanın.</p>
+          <form id="download-form" class="download-form" novalidate>
+            <label for="mp3-url">Kaynak medya bağlantısı (izinli URL)</label>
+            <input id="mp3-url" name="mp3-url" type="url" placeholder="https://example.com/video-or-audio-file" required>
+            <label for="download-format">Format</label>
+            <select id="download-format" name="download-format" required>
+              <optgroup label="Audio">
+                <option value="mp3" selected>mp3</option>
+                <option value="m4a">m4a</option>
+                <option value="flac">flac</option>
+                <option value="opus">opus</option>
+                <option value="wav">wav</option>
+              </optgroup>
+              <optgroup label="Video">
+                <option value="360">360</option>
+                <option value="480">480</option>
+                <option value="720">720</option>
+                <option value="1080">1080</option>
+                <option value="1440">1440</option>
+                <option value="2160">2160</option>
+              </optgroup>
+            </select>
+            <button class="btn btn-primary" type="submit">Dönüştür ve İndir</button>
+          </form>
+          <div id="status-box" class="status-box" aria-live="polite">Hazır</div>
+          <div class="progress" role="progressbar" aria-label="İndirme ilerlemesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span id="progress-bar"></span>
+          </div>
+        </section>
+
+        <article class="card feed-card">
+          <header><img src="https://avatars.githubusercontent.com/u/583231?v=4" alt=""><p><strong>mert</strong> download completed <span> · 9m</span></p></header>
+          <h3>podcast-ep-42.mp3</h3>
+          <footer><button class="action-btn" type="button">Open folder</button><button class="action-btn" type="button">Copy link</button></footer>
+        </article>
+
+        <article class="card feed-card">
+          <header><img src="https://avatars.githubusercontent.com/u/19864447?v=4" alt=""><p><strong>elif</strong> queue created <span> · 26m</span></p></header>
+          <h3>5 MP3 dosyası indirilmeyi bekliyor</h3>
+          <footer><button class="action-btn" type="button">View queue</button></footer>
+        </article>
+
+        <div class="card skeleton-card" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <aside class="right-col">
+        <section class="card module">
+          <h3>Recent activity</h3>
+          <ul>
+            <li>indirme kuyruğu başlatıldı <span>12m</span></li>
+            <li>2 dosya başarıyla kaydedildi <span>31m</span></li>
+            <li>1 dosya URL hatası verdi <span>2h</span></li>
+          </ul>
+        </section>
+
+        <section class="card module">
+          <h3>Explore sources</h3>
+          <div class="suggestion">
+            <a href="#">free-music-archive</a>
+            <p>Lisanslı ve telifsiz örnek MP3 listeleri</p>
+            <small>Public catalog</small>
+          </div>
+          <div class="suggestion">
+            <a href="#">podcast-index</a>
+            <p>Açık podcast MP3 feed dizini</p>
+            <small>Open feed</small>
+          </div>
+        </section>
+
+        <section class="card module">
+          <h3>Tips / Docs</h3>
+          <ul class="links">
+            <li><a href="#">Yasal kullanım rehberi</a></li>
+            <li><a href="#">CORS ve indirme notları</a></li>
+            <li><a href="#">Dosya adı standartları</a></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

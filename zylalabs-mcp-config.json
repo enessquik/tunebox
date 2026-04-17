@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "zylalabs": {
+      "type": "http",
+      "url": "https://mcp.zylalabs.com/mcp?apikey=${COPILOT_MCP_ZYLALABS_API_KEY}",
+      "tools": [
+        "*"
+      ]
+    }
+  }
+}
