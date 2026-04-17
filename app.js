@@ -32,6 +32,38 @@ const setFormDisabled = (disabled) => {
   });
 };
 
+const pollProgress = async (progressUrl) => {
+  const maxAttempts = 90;
+
+  for (let i = 0; i < maxAttempts; i += 1) {
+    const response = await fetch("/api/progress", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ progressUrl })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `Progress hatası (HTTP ${response.status})`);
+    }
+
+    if (payload.failed) {
+      throw new Error(payload.message || "İndirme hazırlığı başarısız.");
+    }
+
+    if (payload.done && payload.downloadUrl) {
+      return payload.downloadUrl;
+    }
+
+    setProgress(Math.min(95, 30 + i));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+
+  throw new Error("İndirme linki zamanında alınamadı.");
+};
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -69,19 +101,39 @@ form.addEventListener("submit", async (event) => {
       body: JSON.stringify({ sourceUrl, format })
     });
 
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.error || "İş oluşturulamadı.");
+    let payload = {};
+    let rawText = "";
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      payload = await response.json().catch(() => ({}));
+    } else {
+      rawText = await response.text().catch(() => "");
     }
 
-    if (!payload.downloadUrl) {
+    if (!response.ok) {
+      const detail =
+        (payload && typeof payload === "object" && payload.error) ||
+        rawText ||
+        `HTTP ${response.status}`;
+      throw new Error(`İş oluşturulamadı. ${String(detail).slice(0, 200)}`.trim());
+    }
+
+    let downloadUrl = payload.downloadUrl || "";
+
+    if (!downloadUrl && payload.progressUrl) {
+      setStatus("İndirme hazırlanıyor...");
+      setProgress(40);
+      downloadUrl = await pollProgress(payload.progressUrl);
+    }
+
+    if (!downloadUrl) {
       throw new Error("İndirilebilir bağlantı alınamadı.");
     }
 
     setProgress(100);
     setStatus("İndirme hazır, başlatılıyor.", "success");
     setFormDisabled(false);
-    window.location.href = payload.downloadUrl;
+    window.location.href = downloadUrl;
   } catch (error) {
     setFormDisabled(false);
     const message = error instanceof Error ? error.message : "İşlem başlatılamadı.";

@@ -5,8 +5,6 @@ const ZYLALABS_API_KEY = process.env.ZYLALABS_API_KEY || "";
 const ZYLALABS_SOURCE_QUERY_PARAM = process.env.ZYLALABS_SOURCE_QUERY_PARAM || "url";
 const ZYLALABS_FORMAT_QUERY_PARAM = process.env.ZYLALABS_FORMAT_QUERY_PARAM || "format";
 const ZYLALABS_DEFAULT_FORMAT = process.env.ZYLALABS_DEFAULT_FORMAT || "mp3";
-const ZYLALABS_PROGRESS_TIMEOUT_MS = Number(process.env.ZYLALABS_PROGRESS_TIMEOUT_MS || 120000);
-const ZYLALABS_PROGRESS_POLL_MS = Number(process.env.ZYLALABS_PROGRESS_POLL_MS || 2000);
 
 const ALLOWED_FORMATS = new Set([
   "mp3",
@@ -101,53 +99,6 @@ function findDownloadUrlDeep(value) {
   return null;
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function pollZylaProgress(progressUrl) {
-  const startedAt = Date.now();
-
-  while (Date.now() - startedAt < ZYLALABS_PROGRESS_TIMEOUT_MS) {
-    const response = await fetch(progressUrl, {
-      headers: {
-        Authorization: `Bearer ${ZYLALABS_API_KEY}`,
-        Accept: "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "");
-      throw new Error(
-        `ZylaLabs progress isteği başarısız (${response.status}). ${errorText.slice(0, 200)}`.trim()
-      );
-    }
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (payload && payload.success === false) {
-      throw new Error(payload.message || "ZylaLabs progress işlemi başarısız.");
-    }
-
-    const resolvedUrl = findDownloadUrlDeep(payload);
-    if (resolvedUrl && resolvedUrl !== progressUrl) {
-      return resolvedUrl;
-    }
-
-    const state = String(
-      payload?.status || payload?.state || payload?.job_status || payload?.jobState || ""
-    ).toLowerCase();
-
-    if (["error", "failed", "cancelled", "canceled"].includes(state)) {
-      throw new Error(payload?.message || "ZylaLabs job başarısız.");
-    }
-
-    await sleep(ZYLALABS_PROGRESS_POLL_MS);
-  }
-
-  throw new Error("ZylaLabs progress zaman aşımına uğradı.");
-}
-
 async function resolveYoutubeDownloadUrl(sourceUrl, format) {
   if (!ZYLALABS_API_KEY) {
     throw new Error("YouTube indirme için ZYLALABS_API_KEY ortam değişkeni gerekli.");
@@ -184,7 +135,9 @@ async function resolveYoutubeDownloadUrl(sourceUrl, format) {
   }
 
   if (payload && payload.progress_url) {
-    return pollZylaProgress(String(payload.progress_url));
+    return {
+      progressUrl: String(payload.progress_url)
+    };
   }
 
   const resolvedUrl = findDownloadUrlDeep(payload);
@@ -192,7 +145,9 @@ async function resolveYoutubeDownloadUrl(sourceUrl, format) {
     throw new Error("ZylaLabs yanıtında indirilebilir bağlantı bulunamadı.");
   }
 
-  return resolvedUrl;
+  return {
+    downloadUrl: resolvedUrl
+  };
 }
 
 function parseBody(req) {
@@ -219,12 +174,13 @@ module.exports = async (req, res) => {
     const sourceUrl = validateSourceUrl(body.sourceUrl || body.url || "");
     const format = normalizeFormat(body.format || ZYLALABS_DEFAULT_FORMAT);
 
-    const downloadUrl = await resolveYoutubeDownloadUrl(sourceUrl, format);
+    const result = await resolveYoutubeDownloadUrl(sourceUrl, format);
 
     return sendJson(res, 200, {
       success: true,
       format,
-      downloadUrl
+      downloadUrl: result.downloadUrl || null,
+      progressUrl: result.progressUrl || null
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "İstek işlenemedi.";
